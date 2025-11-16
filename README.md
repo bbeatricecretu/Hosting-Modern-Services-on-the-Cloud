@@ -1,9 +1,55 @@
 # Dropbox-like File Sharing Backend
-
+This project was developed as part of the “Hosting Modern Services on the Cloud” workshop organized by MHP – A Porsche Company on 15 Nov 2025.
 This repository contains a sample implementation of a serverless backend that accepts file uploads, stores them in Amazon S3, and writes the metadata alongside pre-signed download URLs into DynamoDB. The solution is composed of:
 
 - An AWS Lambda function (TypeScript/Node.js 18) invoked through API Gateway.
 - An AWS CDK stack (TypeScript) that provisions the infrastructure: S3 bucket, DynamoDB table, Lambda function, and API Gateway REST API.
+
+## Core AWS Services Used
+
+### AWS Lambda
+Serverless compute — runs backend code on demand without managing servers.
+Used for validating requests, uploading files, generating pre-signed URLs, and writing metadata.
+
+### Amazon S3
+Object storage — holds uploaded files.
+Pre-signed URLs provide secure temporary download access.
+
+### Amazon DynamoDB
+NoSQL database storing file metadata (file name, owner, S3 path, expiration, etc.).
+
+### API Gateway
+Public API entry point.
+Validates JWT tokens, routes requests, triggers Lambda.
+
+### Amazon Cognito
+Authentication + Authorization.
+Issues JWT tokens that clients must include in API requests.
+
+### IAM
+Permission system ensuring least-privilege access between Lambda, S3, DynamoDB, and API Gateway.
+
+### AWS CDK / CloudFormation
+Infrastructure-as-code — reproducible deployments of all AWS resources.
+
+### CloudWatch
+Provides logs and metrics for debugging and monitoring Lambda and API activity.
+
+## Workflow
+
+1. User authenticates → Cognito returns a JWT token.
+2. User uploads a file → Calls POST /upload with Authorization: Bearer <JWT>.
+3. API Gateway verifies the token → forwards to Lambda.
+4. Lambda handles logic:
+   - validates input
+   - uploads file to S3 (or returns a pre-signed POST URL)
+   - generates a pre-signed download URL
+   - stores metadata in DynamoDB
+5. User downloads the file directly from S3 using the pre-signed link.
+6. CloudWatch logs all Lambda executions.
+7. CDK deploys all the infrastructure reliably.
+
+This forms a compact, scalable, pay-per-use serverless system.
 
 ## Lambda API Contract
 
